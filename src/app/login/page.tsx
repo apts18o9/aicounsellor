@@ -1,15 +1,28 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleLogin = () => {
-    // Dummy auth logic; replace with real API call
-    if (email && password) {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    const res = await signIn('credentials', {
+      redirect: false,
+      email,
+      password,
+    });
+    setLoading(false);
+    if (res?.error) {
+      setError(res.error);
+    } else {
       router.push('/chat');
     }
   };
@@ -19,62 +32,59 @@ export default function LoginPage() {
       {/* Optional grid background */}
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(#1f2937_1px,transparent_1px)] [background-size:40px_40px] opacity-10" />
 
+      {/* Card wrapper */}
       <div className="w-full max-w-md bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl shadow-2xl p-8">
-        <h2 className="text-3xl font-bold text-center text-white mb-6">
-          Sign in to your account
-        </h2>
+        {/* Header section */}
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-white mb-2">Sign in</h2>
+          <p className="text-gray-400">Sign in to your account to get started.</p>
+        </div>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleLogin();
-          }}
-          className="space-y-6"
-        >
-          {/* Email Field */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
-              Email address
+        {/* Form section */}
+        <form onSubmit={handleLogin} className="space-y-6 mt-6">
+          <div className="space-y-2">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+              Email
             </label>
             <input
               id="email"
-              name="email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-gray-700 bg-[#161B22] text-white px-3 py-2 placeholder-gray-500
+              className="w-full rounded-md border border-gray-700 bg-gray-800/50 text-white px-3 py-2 placeholder-gray-500
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition"
               placeholder="you@example.com"
             />
           </div>
-
-          {/* Password Field */}
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+          <div className="space-y-2">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300">
               Password
             </label>
             <input
               id="password"
-              name="password"
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-gray-700 bg-[#161B22] text-white px-3 py-2 placeholder-gray-500
+              className="w-full rounded-md border border-gray-700 bg-gray-800/50 text-white px-3 py-2 placeholder-gray-500
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition"
               placeholder="••••••••"
             />
           </div>
-
-          {/* Sign in Button */}
           <button
             type="submit"
             className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium
             focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300"
+            disabled={loading}
           >
-            Sign in
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
+          {error && (
+            <p className="text-center text-red-500 text-sm mt-4">
+              {error}
+            </p>
+          )}
         </form>
 
         {/* Sign up redirect */}
