@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "@/server/db"; // adjust path if needed
+import { prisma } from "@/server/db"; 
 import { compare } from "bcryptjs";
 
 const handler = NextAuth({
