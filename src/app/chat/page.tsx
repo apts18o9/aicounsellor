@@ -1,14 +1,38 @@
-'use client'
+'use client';
+
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { trpc } from '@/lib/trpc';
 import ChatSessions from '@/components/ChatSessions';
 import ChatWindow from '@/components/ChatWindow';
 import ChatInput from '@/components/ChatInput';
-import type { ChatSession, Message } from '@/types';
-import { useRouter } from 'next/navigation';
+import type { ChatSession } from '@/types';
+import { z } from 'zod';
+import type { Message } from '@/types';
+
+// Define the schema for a single chat message
+const chatMessageSchema = z.object({
+  role: z.enum(['user', 'model']),
+  parts: z.array(z.object({
+    text: z.string(),
+  })),
+});
+
+// Infer the TypeScript type from the schema
+type ChatMessage = z.infer<typeof chatMessageSchema>;
+
+
+const mapChatMessagesToMessages = (chatMessages: ChatMessage[]): Message[] =>
+  chatMessages.map((msg, idx) => ({
+    id: idx,
+    text: msg.parts.map(part => part.text).join(' '),
+    sender: msg.role === 'user' ? 'user' : 'ai',
+    timestamp: new Date().toLocaleTimeString(),
+  }));
 
 export default function ChatPage() {
   const router = useRouter();
-  
+
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([
     { id: '1', title: 'My first career path', lastMessage: 'Great, thanks for your help!', active: true },
     { id: '2', title: 'Resume review session', lastMessage: 'I will send you my new resume.', active: false },
@@ -16,12 +40,28 @@ export default function ChatPage() {
   ]);
   const [currentSessionId, setCurrentSessionId] = useState<string>('1');
 
-  const [mockMessages] = useState<Message[]>([
-    { id: 1, text: "Hello! How can I help you with your career goals today?", sender: 'ai', timestamp: '10:00 AM' },
-    { id: 2, text: "I'm looking for advice on transitioning from marketing to data science.", sender: 'user', timestamp: '10:02 AM' },
-    { id: 3, text: "That's a great goal! To start, let's talk about the key skills needed for data science...", sender: 'ai', timestamp: '10:03 AM' },
-    { id: 4, text: "What kind of projects should I work on to build a portfolio?", sender: 'user', timestamp: '10:05 AM' },
-  ]);
+  // State to hold the conversation messages dynamically
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
+
+  // tRPC mutation hook for sending messages
+  const chatMutation = trpc.chat.sendMessage.useMutation({
+    onSuccess: (aiResponse) => {
+      // Cast role to "user" | "model" if you trust the backend
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          ...aiResponse,
+          role: aiResponse.role === "user" ? "user" : "model"
+        } as ChatMessage
+      ]);
+      setInput('');
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error);
+      alert('Failed to get a response from the AI. Please try again.');
+    },
+  });
 
   const selectSession = (sessionId: string) => {
     setCurrentSessionId(sessionId);
@@ -35,12 +75,27 @@ export default function ChatPage() {
     router.push('/');
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim() === '' || chatMutation.isPending) return;
+    // Build the new history including the user's message
+    const newMessage: ChatMessage = { role: 'user', parts: [{ text: input }] };
+    const history = [...messages, newMessage];
+    chatMutation.mutate({ message: input, history });
+    setMessages(history); // Optimistically update local state
+  };
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
       <ChatSessions chatSessions={chatSessions} selectSession={selectSession} handleLogout={handleLogout} />
       <div className="flex-grow flex flex-col p-4 md:p-8">
-        <ChatWindow messages={mockMessages} />
-        <ChatInput />
+        <ChatWindow messages={mapChatMessagesToMessages(messages)} />
+        <ChatInput
+          input={input}
+          setInput={setInput}
+          handleSubmit={handleSubmit}
+          isLoading={chatMutation.isPending}
+        />
       </div>
     </div>
   );
