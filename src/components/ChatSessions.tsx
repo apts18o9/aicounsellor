@@ -4,14 +4,32 @@ interface Props {
   chatSessions: ChatSession[];
   selectSession: (id: string) => void;
   handleLogout: () => void;
+  onNewChat: () => void;
+  sessionsLoading: boolean;
+  currentSessionId: string;
 }
 
-export default function ChatSessions({ chatSessions, selectSession, handleLogout }: Props) {
+export default function ChatSessions({
+  chatSessions,
+  selectSession,
+  handleLogout,
+  onNewChat,
+}: Props) {
+  // Wrap onNewChat to add a log statement
+  const handleNewChat = () => {
+    console.log('Attempting to create a new chat session...');
+    onNewChat();
+  };
+
   return (
     <div className="w-full md:w-1/4 lg:w-1/5 bg-white shadow-lg p-4 flex flex-col border-r border-gray-200">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-gray-800">Chat Sessions</h2>
-        <button className="text-blue-600 hover:text-blue-800 transition duration-300" title="New session">
+        <button
+          className="text-blue-600 hover:text-blue-800 transition duration-300"
+          title="New session"
+          onClick={handleNewChat}
+        >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>

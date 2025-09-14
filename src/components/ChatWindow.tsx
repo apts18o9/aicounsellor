@@ -2,6 +2,7 @@ import type { Message } from '../types';
 
 interface Props {
   messages: Message[];
+  loading: boolean;
 }
 
 export default function ChatWindow({ messages }: Props) {

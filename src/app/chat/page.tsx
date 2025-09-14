@@ -1,60 +1,75 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import ChatSessions from '@/components/ChatSessions';
 import ChatWindow from '@/components/ChatWindow';
 import ChatInput from '@/components/ChatInput';
-import type { ChatSession } from '@/types';
-import { z } from 'zod';
-import type { Message } from '@/types';
-
-// Define the schema for a single chat message
-const chatMessageSchema = z.object({
-  role: z.enum(['user', 'model']),
-  parts: z.array(z.object({
-    text: z.string(),
-  })),
-});
-
-// Infer the TypeScript type from the schema
-type ChatMessage = z.infer<typeof chatMessageSchema>;
-
-
-const mapChatMessagesToMessages = (chatMessages: ChatMessage[]): Message[] =>
-  chatMessages.map((msg, idx) => ({
-    id: idx,
-    text: msg.parts.map(part => part.text).join(' '),
-    sender: msg.role === 'user' ? 'user' : 'ai',
-    timestamp: new Date().toLocaleTimeString(),
-  }));
+import { v4 as uuidv4 } from 'uuid';
+import type { ChatSession, Message } from '@/types';
 
 export default function ChatPage() {
   const router = useRouter();
 
-  const [chatSessions, setChatSessions] = useState<ChatSession[]>([
-    { id: '1', title: 'My first career path', lastMessage: 'Great, thanks for your help!', active: true },
-    { id: '2', title: 'Resume review session', lastMessage: 'I will send you my new resume.', active: false },
-    { id: '3', title: 'Interview prep questions', lastMessage: 'Sounds good!', active: false },
-  ]);
-  const [currentSessionId, setCurrentSessionId] = useState<string>('1');
-
-  // State to hold the conversation messages dynamically
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [userId, setUserId] = useState<string>('');
+  const [currentSessionId, setCurrentSessionId] = useState<string>('');
   const [input, setInput] = useState('');
+  const [userEmail, setUserEmail] = useState<string>('');
 
-  // tRPC mutation hook for sending messages
-  const chatMutation = trpc.chat.sendMessage.useMutation({
-    onSuccess: (aiResponse) => {
-      // Cast role to "user" | "model" if you trust the backend
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          ...aiResponse,
-          role: aiResponse.role === "user" ? "user" : "model"
-        } as ChatMessage
-      ]);
+  // Get or create userId and userEmail on mount
+  useEffect(() => {
+    let localUserId = localStorage.getItem('userId');
+    let localUserEmail = localStorage.getItem('userEmail');
+    if (!localUserId) {
+      localUserId = uuidv4();
+      localStorage.setItem('userId', localUserId);
+    }
+    if (!localUserEmail) {
+      localUserEmail = `user_${localUserId}@example.com`;
+      localStorage.setItem('userEmail', localUserEmail);
+    }
+    setUserId(localUserId);
+    setUserEmail(localUserEmail);
+  }, []);
+
+  // Fetch chat sessions
+  const chatSessionsQuery = trpc.chat.getChatSessions.useQuery(
+    { userId },
+    { enabled: !!userId }
+  );
+
+  // Fetch messages for the active session
+  const messagesQuery = trpc.chat.getMessagesBySessionId.useQuery(
+    { sessionId: currentSessionId },
+    { enabled: !!currentSessionId }
+  );
+
+  // Mutation to create a new session
+  const createSessionMutation = trpc.chat.createChatSession.useMutation({
+    onSuccess: (newSession) => {
+      setCurrentSessionId(newSession.id);
+      chatSessionsQuery.refetch();
+    },
+  });
+
+  const handleNewChat = () => {
+    createSessionMutation.mutate({ userId, title: "New Chat", userEmail });
+  };
+
+  const selectSession = (sessionId: string) => {
+    setCurrentSessionId(sessionId);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('userId');
+    router.push('/');
+  };
+
+  // Mutation to send a message
+  const sendMessageMutation = trpc.chat.sendMessage.useMutation({
+    onSuccess: () => {
+      messagesQuery.refetch();
       setInput('');
     },
     onError: (error) => {
@@ -63,38 +78,58 @@ export default function ChatPage() {
     },
   });
 
-  const selectSession = (sessionId: string) => {
-    setCurrentSessionId(sessionId);
-    setChatSessions(chatSessions.map(session => ({
-      ...session,
-      active: session.id === sessionId
-    })));
-  };
-
-  const handleLogout = () => {
-    router.push('/');
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim() === '' || chatMutation.isPending) return;
-    // Build the new history including the user's message
-    const newMessage: ChatMessage = { role: 'user', parts: [{ text: input }] };
-    const history = [...messages, newMessage];
-    chatMutation.mutate({ message: input, history });
-    setMessages(history); // Optimistically update local state
+    if (input.trim() === '' || sendMessageMutation.isPending) return;
+
+    // Map messages to the expected history format
+    const history = (messagesQuery.data || []).map(msg => ({
+      role: msg.sender === 'user' ? 'user' as const : 'model' as const,
+      parts: [{ text: msg.text }],
+    }));
+
+    sendMessageMutation.mutate({
+      message: input,
+      sessionId: currentSessionId,
+      history,
+    });
   };
 
+  // Map backend sessions to frontend ChatSession type
+  const chatSessions: ChatSession[] = (chatSessionsQuery.data || []).map(session => ({
+    id: session.id,
+    title: session.title,
+    lastMessage: session.lastMessage ?? '',
+    active: session.id === currentSessionId,
+  }));
+
+  // Map backend messages to frontend Message type
+  const messages: Message[] = (messagesQuery.data || []).map(msg => ({
+    id: Number(msg.id),
+    text: msg.text,
+    sender: msg.sender.toLowerCase() === 'user' ? 'user' : 'ai',
+    timestamp: msg.timestamp,
+  }));
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
-      <ChatSessions chatSessions={chatSessions} selectSession={selectSession} handleLogout={handleLogout} />
+      <ChatSessions
+        chatSessions={chatSessions}
+        selectSession={selectSession}
+        handleLogout={handleLogout}
+        onNewChat={handleNewChat}
+        sessionsLoading={chatSessionsQuery.isLoading}
+        currentSessionId={currentSessionId}
+      />
       <div className="flex-grow flex flex-col p-4 md:p-8">
-        <ChatWindow messages={mapChatMessagesToMessages(messages)} />
+        <ChatWindow
+          messages={messages}
+          loading={messagesQuery.isLoading || sendMessageMutation.isPending}
+        />
         <ChatInput
           input={input}
           setInput={setInput}
           handleSubmit={handleSubmit}
-          isLoading={chatMutation.isPending}
+          isPending={sendMessageMutation.isPending}
         />
       </div>
     </div>
