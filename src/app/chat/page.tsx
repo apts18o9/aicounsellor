@@ -49,14 +49,16 @@ export default function ChatPage() {
 
   const handleLogout = () => {
     signOut();
-    router.push('/'); 
+    router.push('/');
   };
 
   // Mutation to send a message
   const sendMessageMutation = trpc.chat.sendMessage.useMutation({
     onSuccess: () => {
-      messagesQuery.refetch();
       setInput('');
+      messagesQuery.refetch();
+      console.log('mutation sucsess, clearning field');
+
     },
     onError: (error) => {
       console.error('Mutation error:', error);
@@ -79,6 +81,18 @@ export default function ChatPage() {
       sessionId: currentSessionId,
       history,
     });
+  };
+
+  const updateTitleMutation = trpc.chat.updateChatSessionTitle.useMutation({
+    onSuccess: () => {
+      chatSessionsQuery.refetch();
+    },
+  });
+
+  const handleTitleUpdate = (newTitle: string) => {
+    if (currentSessionId && newTitle.trim()) {
+      updateTitleMutation.mutate({ sessionId: currentSessionId, title: newTitle });
+    }
   };
 
   // Map backend sessions to frontend ChatSession type
@@ -112,7 +126,7 @@ export default function ChatPage() {
       </div>
     );
 
-  console.log('chat session', chatSessions);
+  // console.log('chat session', chatSessions);
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
@@ -128,6 +142,9 @@ export default function ChatPage() {
         <ChatWindow
           messages={messages}
           loading={messagesQuery.isLoading || sendMessageMutation.isPending}
+          sessionId={currentSessionId}
+          sessionTitle={chatSessions.find(s => s.id === currentSessionId)?.title ?? ""}
+          onTitleUpdate={handleTitleUpdate}
         />
         <ChatInput
           input={input}

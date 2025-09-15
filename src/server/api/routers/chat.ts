@@ -100,9 +100,10 @@ export const chatRouter = router({
             const chat = model.startChat({ history: input.history });
             const result = await chat.sendMessage(message);
             const response = await result.response;
-            const aiResponseContent = response.text();
-
-            // 3. Save the AI's response to the database
+            const aiResponseContentRaw = response.text();
+            // Remove all asterisks
+            const aiResponseContent = aiResponseContentRaw.replace(/\*/g, '');
+         
             const aiMessage = await prisma.message.create({
                 data: {
                     content: aiResponseContent,
@@ -110,6 +111,11 @@ export const chatRouter = router({
                     chatSessionId: sessionId,
                 },
             });
+           
+            return {
+                role: 'model',
+                parts: [{ text: aiMessage.content }],
+            };
 
             // 4. Update the session's 'updatedAt' timestamp
             await prisma.chatSession.update({
@@ -142,4 +148,20 @@ export const chatRouter = router({
                 timestamp: msg.createdAt.toISOString(),
             }));
         }),
+
+
+    //to update the chat name in chatWindow
+    updateChatSessionTitle: publicProcedure
+        .input(z.object({
+            sessionId: z.string(),
+            title: z.string().min(1),
+        }))
+        .mutation(async ({input}) => {
+            const {sessionId, title} = input;
+            const updated = await prisma.chatSession.update({
+                where: {id: sessionId},
+                data: {title}
+            });
+            return updated;
+        })
 });
