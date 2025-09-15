@@ -1,4 +1,5 @@
-import type { ChatSession } from '../types';
+import React from "react";
+import type { ChatSession } from "../types";
 
 interface Props {
   chatSessions: ChatSession[];
@@ -12,51 +13,43 @@ interface Props {
 export default function ChatSessions({
   chatSessions,
   selectSession,
-  handleLogout,
   onNewChat,
+  sessionsLoading,
+  currentSessionId,
 }: Props) {
-  console.log('Rendering chatSessions:', chatSessions);
-  // Wrap onNewChat to add a log statement
-  const handleNewChat = () => {
-    console.log('Attempting to create a new chat session...');
-    onNewChat();
-  };
-
   return (
-    <div className="w-full md:w-1/4 lg:w-1/5 bg-white shadow-lg p-4 flex flex-col border-r border-gray-200">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-800">Chat Sessions</h2>
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-white/90">
+        <span className="font-semibold text-blue-700 text-lg">Chats</span>
         <button
-          className="text-blue-600 hover:text-blue-800 transition duration-300"
-          title="New session"
-          onClick={handleNewChat}
+          onClick={onNewChat}
+          className="px-3 py-1 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
+          + New
         </button>
       </div>
-      <ul className="space-y-2 flex-grow overflow-y-auto">
-        {chatSessions.map(session => (
-          <li key={session.id}>
+      <div className="flex-1 overflow-y-auto bg-white/80">
+        {sessionsLoading ? (
+          <div className="p-4 text-gray-400 text-center">Loading...</div>
+        ) : chatSessions.length === 0 ? (
+          <div className="p-4 text-gray-400 text-center">No chats yet.</div>
+        ) : (
+          chatSessions.map(session => (
             <button
+              key={session.id}
               onClick={() => selectSession(session.id)}
-              className={`w-full text-left p-3 rounded-lg transition duration-300
-                ${session.active ? 'bg-blue-50 border-l-4 border-blue-600' : 'bg-gray-50 hover:bg-gray-100 border-l-4 border-transparent'}`}
+              className={`w-full text-left px-4 py-3 border-b flex flex-col gap-1 transition
+                ${session.id === currentSessionId
+                  ? "bg-blue-50 border-blue-600"
+                  : "hover:bg-blue-100 border-transparent"}`}
             >
-              <h3 className="text-sm font-semibold text-gray-800 truncate">{session.title}</h3>
-              <p className="text-xs text-gray-500 truncate mt-1">{session.lastMessage}</p>
+              <span className={`font-medium ${session.id === currentSessionId ? "text-blue-700" : "text-gray-700"}`}>
+                {session.title}
+              </span>
+              <span className="text-xs text-gray-400 truncate">{session.lastMessage}</span>
             </button>
-          </li>
-        ))}
-      </ul>
-      <div className="mt-4 border-t pt-4">
-        <button
-          onClick={handleLogout}
-          className="w-full text-center py-2 px-4 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition duration-300"
-        >
-          Log Out
-        </button>
+          ))
+        )}
       </div>
     </div>
   );
