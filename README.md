@@ -1,8 +1,4 @@
-<img width="1500" height="955" alt="Screenshot 2025-09-15 194156" src="https://github.com/user-attachments/assets/9db954cb-f2cf-48d9-b236-1350a0d2a041" />
-<img width="1500" height="927" alt="Screenshot 2025-09-15 194205" src="https://github.com/user-attachments/assets/ebd19dc2-d9ef-4352-adf1-9798064a712f" />
-<img width="1500" height="930" alt="Screenshot 2025-09-15 194244" src="https://github.com/user-attachments/assets/e1256790-9387-4b68-8dea-76811253eb13" />
-<img width="1500" height="928" alt="Screenshot 2025-09-15 194252" src="https://github.com/user-attachments/assets/5f26d0d4-b393-4d03-96b1-1566fd8be723" />
-<img width="1500" height="923" alt="Screenshot 2025-09-15 194938" src="https://github.com/user-attachments/assets/509911bb-3b68-4f3e-b14b-a34281b8862b" />
+
 # AI – Career Counseling Chat App
 
 This is an AI-powered career counseling platform featuring secure authentication and a modern chat interface.  
@@ -122,6 +118,13 @@ npx prisma studio
 - Deploy as a Next.js app (Vercel, Netlify, etc).
 
 ---
+
+
+<img width="1500" height="955" alt="Screenshot 2025-09-15 194156" src="https://github.com/user-attachments/assets/9db954cb-f2cf-48d9-b236-1350a0d2a041" />
+<img width="1500" height="927" alt="Screenshot 2025-09-15 194205" src="https://github.com/user-attachments/assets/ebd19dc2-d9ef-4352-adf1-9798064a712f" />
+<img width="1500" height="930" alt="Screenshot 2025-09-15 194244" src="https://github.com/user-attachments/assets/e1256790-9387-4b68-8dea-76811253eb13" />
+<img width="1500" height="928" alt="Screenshot 2025-09-15 194252" src="https://github.com/user-attachments/assets/5f26d0d4-b393-4d03-96b1-1566fd8be723" />
+<img width="1500" height="923" alt="Screenshot 2025-09-15 194938" src="https://github.com/user-attachments/assets/509911bb-3b68-4f3e-b14b-a34281b8862b" />
 
 ## 🤝 Contributing
 
