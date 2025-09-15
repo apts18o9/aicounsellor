@@ -24,7 +24,7 @@ const eslintConfig = [
     rules: {
       "@typescript-eslint/no-unused-expressions": "off",
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "off",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "@typescript-eslint/no-this-alias": "error",  // keep as error or "warn"
