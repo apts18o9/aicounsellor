@@ -1,37 +1,23 @@
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import ChatSessions from '@/components/ChatSessions';
 import ChatWindow from '@/components/ChatWindow';
 import ChatInput from '@/components/ChatInput';
-import { v4 as uuidv4 } from 'uuid';
+import { useSession, signOut } from 'next-auth/react';
 import type { ChatSession, Message } from '@/types';
 
 export default function ChatPage() {
   const router = useRouter();
-
-  const [userId, setUserId] = useState<string>('');
+  const { data: session, status } = useSession();
   const [currentSessionId, setCurrentSessionId] = useState<string>('');
   const [input, setInput] = useState('');
-  const [userEmail, setUserEmail] = useState<string>('');
 
-  // Get or create userId and userEmail on mount
-  useEffect(() => {
-    let localUserId = localStorage.getItem('userId');
-    let localUserEmail = localStorage.getItem('userEmail');
-    if (!localUserId) {
-      localUserId = uuidv4();
-      localStorage.setItem('userId', localUserId);
-    }
-    if (!localUserEmail) {
-      localUserEmail = `user_${localUserId}@example.com`;
-      localStorage.setItem('userEmail', localUserEmail);
-    }
-    setUserId(localUserId);
-    setUserEmail(localUserEmail);
-  }, []);
+  // Use authenticated user's id and email
+  const userId = session?.user?.id ?? '';
+  const userEmail = session?.user?.email ?? '';
 
   // Fetch chat sessions
   const chatSessionsQuery = trpc.chat.getChatSessions.useQuery(
@@ -62,8 +48,8 @@ export default function ChatPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('userId');
-    router.push('/');
+    signOut();
+    router.push('/'); 
   };
 
   // Mutation to send a message
@@ -110,6 +96,24 @@ export default function ChatPage() {
     sender: msg.sender.toLowerCase() === 'user' ? 'user' : 'ai',
     timestamp: msg.timestamp,
   }));
+
+  // Show loading or sign-in UI
+  if (status === "loading") return <div>Loading...</div>;
+  if (!session)
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <p className="mb-4">You must be signed in to use the chat.</p>
+        <button
+          onClick={() => router.push('/login')}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg"
+        >
+          Sign in
+        </button>
+      </div>
+    );
+
+  console.log('chat session', chatSessions);
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
       <ChatSessions

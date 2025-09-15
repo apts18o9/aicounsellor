@@ -15,6 +15,7 @@ export default function ChatSessions({
   handleLogout,
   onNewChat,
 }: Props) {
+  console.log('Rendering chatSessions:', chatSessions);
   // Wrap onNewChat to add a log statement
   const handleNewChat = () => {
     console.log('Attempting to create a new chat session...');

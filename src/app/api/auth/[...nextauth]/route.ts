@@ -20,7 +20,6 @@ const handler = NextAuth({
                     typeof credentials?.password !== "string" ||
                     typeof user.password !== "string"
                 ) return null;
-                // If you hash passwords, use compare
                 const isValid = await compare(credentials.password, user.password);
                 if (!isValid) return null;
                 return { id: user.id, email: user.email };
@@ -31,7 +30,24 @@ const handler = NextAuth({
     pages: {
         signIn: "/login",
         error: "/login"
+    },
+    callbacks: {
+        async jwt({ token, user }) {
+            // Add user id to the token on login
+            if (user) {
+                token.id = user.id;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            // Add user id from token to session
+            if (session.user && token.id) {
+                session.user.id = token.id as string;
+            }
+            return session;
+        }
     }
 });
 
 export { handler as GET, handler as POST };
+// ...existing code...
