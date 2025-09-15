@@ -1,36 +1,134 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# AI – Career Counseling Chat App
 
-First, run the development server:
+This is an AI-powered career counseling platform featuring secure authentication and a modern chat interface.  
+This project uses Next.js, NextAuth, Prisma, PostgreSQL, and tRPC.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 🚀 Features
+
+- Email/password authentication (NextAuth + Prisma)
+- Secure user/session management
+- AI-powered chat with editable session titles(Gemini)
+- Modern, responsive UI with light/dark mode toggle
+- Persistent chat history per user
+
+---
+
+## 🛠️ Setup Instructions
+
+### 1. **Clone the Repository**
+
+### 2. **Install Dependencies**
+
+
+### 3. **Configure Environment Variables**
+
+Create a `.env` file in the root directory and add:
+
+```
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+NEXTAUTH_SECRET=your-random-secret
+NEXTAUTH_URL=http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> Replace `USER`, `PASSWORD`, `HOST`, `PORT`, and `DATABASE` with your PostgreSQL credentials.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. **Set Up the Database**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Edit `prisma/schema.prisma` if needed.
+- Run Prisma migrations:
 
-## Learn More
+```
+npx prisma migrate dev --name init
+```
 
-To learn more about Next.js, take a look at the following resources:
+- Generate Prisma client:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+npx prisma generate
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 5. **Start the Development Server**
 
-## Deploy on Vercel
+```
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🧑‍💻 Authentication
+
+- Sign up and log in with email and password.
+- Sessions are managed via NextAuth and stored in PostgreSQL.
+
+---
+
+## 💬 Chat Features
+
+- Start new chat sessions.
+- Edit chat session titles.
+- Send and receive AI-powered messages.
+- All chats are private and tied to your account.
+
+---
+
+## 🎨 UI/UX
+
+- Responsive layout for desktop and mobile.
+- Sidebar for chat sessions.
+- Sticky input and header.
+- Toggle between light and dark mode.
+
+---
+
+## 🗄️ Tech Stack
+
+- **Frontend:** Next.js, React, Tailwind CSS
+- **Backend:** Next.js API routes, tRPC
+- **Auth:** NextAuth.js (CredentialsProvider)
+- **Database:** PostgreSQL (via Prisma ORM)
+
+---
+
+## 📝 Prisma Schema
+
+See [`prisma/schema.prisma`](prisma/schema.prisma) for all models:
+- `User`, `Session`, `Verification`, `ChatSession`, `Message`, `Role`
+
+---
+
+## 🧪 Testing
+
+You can use [Prisma Studio](https://pris.ly/d/studio) to inspect your database:
+
+```sh
+npx prisma studio
+```
+
+---
+
+## 📦 Deployment
+
+- Set your environment variables in your deployment platform.
+- Run migrations and generate Prisma client.
+- Deploy as a Next.js app (Vercel, Netlify, etc).
+
+---
+
+
+<img width="1500" height="955" alt="Screenshot 2025-09-15 194156" src="https://github.com/user-attachments/assets/9db954cb-f2cf-48d9-b236-1350a0d2a041" />
+<img width="1500" height="927" alt="Screenshot 2025-09-15 194205" src="https://github.com/user-attachments/assets/ebd19dc2-d9ef-4352-adf1-9798064a712f" />
+<img width="1500" height="930" alt="Screenshot 2025-09-15 194244" src="https://github.com/user-attachments/assets/e1256790-9387-4b68-8dea-76811253eb13" />
+<img width="1500" height="928" alt="Screenshot 2025-09-15 194252" src="https://github.com/user-attachments/assets/5f26d0d4-b393-4d03-96b1-1566fd8be723" />
+<img width="1500" height="923" alt="Screenshot 2025-09-15 194938" src="https://github.com/user-attachments/assets/509911bb-3b68-4f3e-b14b-a34281b8862b" />
+
+## 🤝 Contributing
+
+Pull requests and issues are welcome!
+
+---
+
