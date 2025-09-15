@@ -19,17 +19,15 @@ const eslintConfig = [
       "build/**",
       "next-env.d.ts",
     ],
+    ...compat.extends("next/core-web-vitals", "next/typescript"),
+
     rules: {
-      // Fix unused vars warning by ignoring variables starting with _
+      "@typescript-eslint/no-unused-expressions": "off",
       "@typescript-eslint/no-unused-vars": [
         "warn",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-        },
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      // Fix empty object type warning by disabling this rule globally
-      "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/no-this-alias": "error",  // keep as error or "warn"
     },
   },
 ];
